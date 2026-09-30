@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+  <system.web>
+    <customErrors mode="RemoteOnly" />
+    <globalization fileEncoding="utf-8" requestEncoding="utf-8" responseEncoding="utf-8" culture="es-CO" uiCulture="es-CO" />
+    <compilation debug="false" targetFramework="4.0" />
+    <authentication mode="Forms">
+      <forms loginUrl="login.aspx" defaultUrl="/" timeout="120" slidingExpiration="true" requireSSL="true" cookieless="UseCookies" />
+    </authentication>
+    <authorization>
+      <deny users="?" />
+    </authorization>
+  </system.web>
+  <location path="login.aspx">
+    <system.web>
+      <authorization>
+        <allow users="*" />
+      </authorization>
+    </system.web>
+  </location>
+  <location path="logout.aspx">
+    <system.web>
+      <authorization>
+        <allow users="*" />
+      </authorization>
+    </system.web>
+  </location>
+  <location path="logo.svg">
+    <system.web>
+      <authorization>
+        <allow users="*" />
+      </authorization>
+    </system.web>
+  </location>
+  <system.webServer>
+    <staticContent>
+      <remove fileExtension=".svg" />
+      <mimeMap fileExtension=".svg" mimeType="image/svg+xml" />
+    </staticContent>
+    <modules runAllManagedModulesForAllRequests="true" />
+    <security>
+      <authentication>
+        <anonymousAuthentication enabled="true" />
+        <basicAuthentication enabled="false" />
+      </authentication>
+    </security>
+    <rewrite>
+      <rules>
+        <rule name="ForceHTTPS" stopProcessing="true">
+          <match url="(.*)" />
+          <conditions>
+            <add input="{HTTPS}" pattern="^OFF$" />
+          </conditions>
+          <action type="Redirect" url="https://{HTTP_HOST}/{R:1}" redirectType="Found" />
+        </rule>
+        <rule name="ExcludeAuthPages" stopProcessing="true">
+          <match url="^(login|logout)\.aspx|logo\.webp" />
+          <action type="None" />
+        </rule>
+        <rule name="ReverseProxyToCentinela" stopProcessing="true">
+          <match url="(.*)" />
+          <action type="Rewrite" url="http://IP_DEL_ESP32/{R:1}" />
+        </rule>
+      </rules>
+      <outboundRules rewriteBeforeCache="true">
+        <rule name="InjectLogoutButton" preCondition="IsHtml">
+          <match filterByTags="None" pattern="&lt;/body&gt;" />
+          <action type="Rewrite" value="&lt;div id='centinela-logout' style='position:fixed;top:14px;right:14px;z-index:999999'&gt;&lt;a href='/logout.aspx' style='display:inline-flex;align-items:center;gap:6px;font-family:Inter,-apple-system,sans-serif;background:linear-gradient(90deg,#00AEEF,#0089c2);color:#fff;padding:9px 16px;border-radius:8px;font-size:.82rem;font-weight:600;text-decoration:none;box-shadow:0 4px 14px rgba(0,137,194,.35)'&gt;Cerrar sesi&#243;n&lt;/a&gt;&lt;/div&gt;&lt;/body&gt;" />
+        </rule>
+        <preConditions>
+          <preCondition name="IsHtml">
+            <add input="{RESPONSE_CONTENT_TYPE}" pattern="^text/html" />
+            <add input="{URL}" pattern="^/(login|logout)\.aspx$" negate="true" />
+          </preCondition>
+        </preConditions>
+      </outboundRules>
+    </rewrite>
+  </system.webServer>
+</configuration>

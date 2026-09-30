@@ -1,0 +1,9 @@
+# Credenciales reales - nunca se suben
+secrets.h
+Keys.txt
+
+# Artefactos de compilacion de Arduino
+build/
+*.o
+*.elf
+*.bin
